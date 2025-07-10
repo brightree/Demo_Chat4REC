@@ -48,12 +48,12 @@ class GraphState(TypedDict):
 
 def recommend_courses(state: GraphState) -> GraphState:
     prompt = f"""
-너는 삼성전자의 세일즈 러닝 추천 챗봇이야.
+너는 삼성전자의 영업사원을 위한 강의 추천 챗봇이야.
 
 사용자 요청:
 {state['user_query']}
 
-아래는 세일즈 강의 리스트야. 사용자 상황을 고려해 3~5개 적절한 강의를 추천하고, 간단한 추천 이유도 포함해줘.
+세일즈 강의 리스트에서 사용자 상황을 고려해 3~5개 적절한 강의를 추천하고, 간단한 추천 이유도 포함해줘.
 
 형식:
 - 강의 제목: ...
@@ -105,6 +105,7 @@ st.markdown(f"""
     <div style="text-align:center;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" width="180" />
         <h2 style="color:{samsung_blue};">삼성전자 세일즈 강의 추천 챗봇</h2>
+        <p style="font-size:16px;">제품에 대한 정보 부족, 소심한 성격, 대인 커뮤니케이션 스킬 등 세일즈 고민을 말씀해 주세요!.</p>        
     </div>
     """, unsafe_allow_html=True)
 
@@ -143,14 +144,7 @@ for idx, turn in enumerate(st.session_state.chat_history):
     </div>
     """, unsafe_allow_html=True)
 
-    # 피드백 버튼
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("👍 좋아요", key=f"like_{idx}"):
-            update_feedback(idx, "positive")
-    with col2:
-        if st.button("👎 별로예요", key=f"dislike_{idx}"):
-            update_feedback(idx, "negative")
+
 
     st.markdown("---")
 
