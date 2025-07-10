@@ -125,22 +125,32 @@ if submitted and user_input.strip():
 
 # 💬 대화 내용 표시 + 피드백 버튼
 for idx, turn in enumerate(st.session_state.chat_history):
-    st.markdown(f"**🙋 나:** {turn['user']}")
-    st.markdown(f"**🤖 챗봇:**")
+    # 사용자 메시지 (오른쪽 정렬)
     st.markdown(f"""
-    <div style="background-color:#f9f9f9;border-left:5px solid {samsung_blue};padding:12px;">
-    <pre style="white-space:pre-wrap;">{turn['bot']}</pre>
+    <div style="text-align:right; margin-bottom: 4px;">
+        <div style="display: inline-block; background-color:#E3F2FD; color: black; padding: 10px 14px; border-radius: 18px; max-width: 80%; font-size: 15px;">
+            {turn['user']}
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    # 챗봇 응답 (왼쪽 정렬)
+    st.markdown(f"""
+    <div style="text-align:left; margin-bottom: 12px;">
+        <div style="display: inline-block; background-color:#F1F1F1; color: black; padding: 10px 14px; border-radius: 18px; max-width: 80%; font-size: 15px;">
+            <pre style="margin:0; white-space:pre-wrap;">{turn['bot']}</pre>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 피드백 버튼
+    col1, col2 = st.columns([1, 1])
     with col1:
-        if st.button(f"👍 좋아요", key=f"pos_{idx}"):
+        if st.button("👍 좋아요", key=f"like_{idx}"):
             update_feedback(idx, "positive")
-            st.success("피드백이 저장되었습니다 👍")
     with col2:
-        if st.button(f"👎 별로예요", key=f"neg_{idx}"):
+        if st.button("👎 별로예요", key=f"dislike_{idx}"):
             update_feedback(idx, "negative")
-            st.warning("피드백이 저장되었습니다 👎")
 
     st.markdown("---")
+
