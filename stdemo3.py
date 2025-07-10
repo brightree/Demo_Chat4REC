@@ -105,7 +105,13 @@ def save_chat_to_db(user_input, llm_response):
     st.session_state.turn_index += 1
 
 # 🎨 페이지 UI
-st.set_page_config(page_title="삼성 세일즈 챗봇", layout="centered")
+st.set_page_config(
+    page_title="삼성 세일즈 챗봇",
+    page_icon="💼",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
 samsung_blue = "#1428A0"
 st.markdown(f"""
     <div style="text-align:center; margin-bottom:20px;">
