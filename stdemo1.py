@@ -84,7 +84,7 @@ st.markdown(
     f"""
     <div style="text-align:center;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" width="180" style="margin-bottom:20px;" />
-        <h2 style="color:{samsung_blue};">삼성전자 전용 세일즈 학습 추천 챗봇</h2>
+        <h2 style="color:{samsung_blue};">삼성전자 전용 세일즈 강좌 추천 챗봇</h2>
         <p style="font-size:16px;">성과 압박, 설득 난관 등 다양한 세일즈 상황에 맞춘 강의를 추천해드립니다.</p>
     </div>
     """,
