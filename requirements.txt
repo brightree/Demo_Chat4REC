@@ -5,5 +5,4 @@ openai
 python-dotenv
 supabase
 streamlit
-pip install langchain langchain-community faiss-cpu
 faiss-cpu
