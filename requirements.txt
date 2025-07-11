@@ -1,7 +1,9 @@
-streamlit
+langchain
+langchain-community
+langchain-openai
 openai
 python-dotenv
-langgraph
-pandas
-numpy
 supabase
+streamlit
+pip install langchain langchain-community faiss-cpu
+faiss-cpu

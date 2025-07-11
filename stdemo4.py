@@ -1,5 +1,5 @@
 # 반영 사항
-    # 멀티턴
+    # 2-3번 정보 취합
 
 import streamlit as st
 from dotenv import load_dotenv
