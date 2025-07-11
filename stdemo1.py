@@ -54,7 +54,7 @@ def recommend_courses(state: GraphState) -> GraphState:
         res = client.chat.completions.create(
             model="gpt-4.1-nano",
             messages=[
-                {"role": "system", "content": "삼성전자 세일즈 강의 추천 전문가"},
+                {"role": "system", "content": "삼성전자 세일즈 고민 상담 및 강의 추천 전문가"},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -72,7 +72,7 @@ graph = builder.compile()
 
 # 🎨 6. UI 설정
 st.set_page_config(
-    page_title="삼성 세일즈 강좌 추천 챗봇",
+    page_title="삼성 세일즈 강의 추천 챗봇",
     page_icon="💼",
     layout="centered",
     initial_sidebar_state="collapsed"
