@@ -6,3 +6,4 @@ python-dotenv
 supabase
 streamlit
 faiss-cpu
+langgraph>=0.5.2
