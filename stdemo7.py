@@ -3,6 +3,7 @@
 # 개선이 필요한 사항
     # 기존 프롬프트 >> 프롬프트 템플릿 사용
 
+from langchain.prompts import PromptTemplate
 import streamlit as st
 from dotenv import load_dotenv
 import os
@@ -18,6 +19,8 @@ from langchain_openai import OpenAIEmbeddings, OpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.chains import RetrievalQA
+from langchain.docstore.document import Document
+
 #from langchain_community.llms import OpenAI
 #from langchain_community.embeddings import OpenAIEmbeddings
 
@@ -45,20 +48,6 @@ if "conversation_id" not in st.session_state:
     st.session_state.conversation_id = f"conv_{uuid.uuid4().hex[:8]}"
 if "turn_index" not in st.session_state:
     st.session_state.turn_index = 0
-
-# ===========================
-# 📚 강의 데이터 로딩 (Agent2)
-# ===========================
-@st.cache_data
-def load_course_data():
-    try:
-        with open("sales_learning_dummy_data.json", "r", encoding="utf-8") as f:
-            return json.load(f)["courses"]
-    except Exception as e:
-        st.error(f"❗강의 데이터를 불러오지 못했습니다: {e}")
-        return []
-
-course_data = load_course_data()
 
 # ===========================
 # 📁 PDF 문서 임베딩 (Agent1)
@@ -95,6 +84,52 @@ def load_or_create_rag_retriever(
 
 rag_retriever = load_or_create_rag_retriever("Rag_Galaxy25_Ultra.pdf")
 rag_chain = RetrievalQA.from_chain_type(llm=OpenAI(temperature=0), retriever=rag_retriever)
+
+# ===========================
+# 📚 강의 데이터 전처리 (Agent2)
+# ===========================
+
+# 강의 데이터 읽기
+@st.cache_data
+def load_course_data():
+    try:
+        with open("sales_learning_dummy_data.json", "r", encoding="utf-8") as f:
+            return json.load(f)["courses"]
+    except Exception as e:
+        st.error(f"❗강의 데이터를 불러오지 못했습니다: {e}")
+        return []
+
+course_data = load_course_data()
+
+# 강의 데이터 랭체인 문서로 변환
+def course_data_to_documents(course_data: list) -> list[Document]:
+    docs = []
+    for course in course_data:
+        text = "\n".join([f"{key}: {value}" for key, value in course.items()])
+        docs.append(Document(page_content=text, metadata={"title": course.get("title", "")}))
+    return docs
+
+# 임베딩 및 청킹
+@st.cache_resource
+def create_course_rag_retriever(course_data: list, index_dir: str = "course_faiss_index") -> FAISS:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+    if os.path.exists(index_dir):
+        return FAISS.load_local(
+            index_dir,
+            OpenAIEmbeddings(api_key=api_key),
+            allow_dangerous_deserialization=True
+        ).as_retriever()
+
+    docs = course_data_to_documents(course_data)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    split_docs = splitter.split_documents(docs)
+
+    embeddings = OpenAIEmbeddings(api_key=api_key)
+    db = FAISS.from_documents(split_docs, embeddings)
+    db.save_local(index_dir)
+    return db.as_retriever()
+
 
 # ==============================
 # 🧠 LangGraph 상태 정의
@@ -151,25 +186,44 @@ agent2
 # ==============================
 # 🤖 Agent1 (RAG 기반 제품 답변)
 # ==============================
+agent1_prompt_template = PromptTemplate(
+    input_variables=["user_query"],
+    template="""
+당신은 삼성전자 제품에 대한 정보를 제공하는 전문 어시스턴트입니다.
+
+사용자의 질문에 대해 명확하고 구조적인 형태로 답변해 주세요.  
+가능하다면 다음 항목을 포함하여 정리해 주세요:
+
+- **핵심 요약**: 가장 중요한 핵심 정보 한두 줄 요약  
+- **기능 설명**: 관련된 주요 기능이나 특징  
+- **스펙/성능**: 기술적인 사양 정보 (있다면)  
+- **비교/차이점**: 관련 제품과 비교가 필요한 경우 간단히  
+- **추가 팁 또는 주의사항**: 사용에 유용한 정보
+
+단답형이 아닌, **친절하고 전문적인 톤**으로 작성하며  
+불필요한 반복이나 장황한 설명은 피하고 간결하게 전달해 주세요.
+{user_query}
+"""
+)
+
 def agent1_product_info(state: GraphState) -> GraphState:
-    user_query = state["user_query"]
     try:
-        answer = rag_chain.run(user_query)
+        formatted_query = agent1_prompt_template.format(
+            user_query=state["user_query"]
+        )
+        answer = rag_chain.run(formatted_query)
     except Exception as e:
         answer = f"❗제품 정보 조회 중 오류 발생: {e}"
     return {**state, "final_response": answer}
 
+
 # ==============================
 # 🎓 Agent2 (강의 추천 챗봇)
 # ==============================
-def agent2_recommend_courses(state: GraphState) -> GraphState:
-    full_history = ""
-    for turn in st.session_state.chat_history:
-        full_history += f"사용자: {turn['user']}\n"
-        full_history += f"챗봇: {turn['bot']}\n"
-    full_history += f"사용자: {state['user_query']}\n"
-
-    prompt = f"""
+# 프롬프트 템플릿 생성
+course_prompt_template = PromptTemplate(
+    input_variables=["full_history", "course_data"],
+    template="""
 당신은 삼성전자 영업사원을 위한 "전문 강의 추천 챗봇"입니다.
 
 ## 역할
@@ -187,7 +241,7 @@ def agent2_recommend_courses(state: GraphState) -> GraphState:
    - 질문은 짧고 명확하되, 적절한 강의를 추천할 수 있도록 질문합니다.
 
 2. **즉시 추천 예외**
-   - 사용자가 “지금 바로 추천해줘”라고 말하면, 질문 생략 후 바로 추천을 진행합니다.
+   - 사용자가 즉각적인 추천을 원하면, 1회 질의응답 이후 바로 추천을 진행합니다.
 
 3. **추천 응답 형식**
    - 강의는 다음 정보를 담되, 자연스럽고 간결한 문장으로 구성합니다:
@@ -222,21 +276,30 @@ def agent2_recommend_courses(state: GraphState) -> GraphState:
 
 
 [강의 목록]
-{json.dumps(course_data, ensure_ascii=False, indent=2)}
+{course_data}
 """
-    try:
-        res = client.chat.completions.create(
-            model="gpt-4.1-nano",
-            messages=[
-                {"role": "system", "content": "삼성전자 세일즈 강의 추천 전문가"},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        response_text = res.choices[0].message.content.strip()
-    except Exception as e:
-        response_text = f"❗추천 생성 중 오류 발생: {e}"
+)
 
-    return {**state, "final_response": response_text}
+# 강의 추천
+@st.cache_resource
+def create_course_rag_retriever(course_data: list, index_dir: str = "course_faiss_index") -> FAISS:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+    if os.path.exists(index_dir):
+        return FAISS.load_local(
+            index_dir,
+            OpenAIEmbeddings(api_key=api_key),
+            allow_dangerous_deserialization=True
+        ).as_retriever()
+
+    docs = course_data_to_documents(course_data)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    split_docs = splitter.split_documents(docs)
+
+    embeddings = OpenAIEmbeddings(api_key=api_key)
+    db = FAISS.from_documents(split_docs, embeddings)
+    db.save_local(index_dir)
+    return db.as_retriever()
 
 # ==============================
 # 🔁 LangGraph 구축
