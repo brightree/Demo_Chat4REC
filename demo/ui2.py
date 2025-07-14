@@ -16,7 +16,7 @@ def render_app_ui(graph, save_chat_to_db):
     if "is_typing" not in st.session_state:
         st.session_state.is_typing = False
 
-    # ==== 삼성스러운 CSS 스타일 ====
+    # CSS Style
     st.markdown("""
     <style>
     /* 메인 컨테이너 중앙 정렬 + 최대폭 제한 */
@@ -102,7 +102,7 @@ def render_app_ui(graph, save_chat_to_db):
         f"""
         <div style="text-align:center; margin-bottom:16px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" width="160" />
-            <h2 style="color:{samsung_blue}; margin-bottom:4px; font-weight:800;">삼ç성전자 Sales Agentic Assistant</h2>
+            <h2 style="color:{samsung_blue}; margin-bottom:4px; font-weight:800;">삼성전자 Sales Agentic Assistant</h2>
             <p style="font-size:16px; margin-bottom:2px; color:#3b466b;">
                 제품 스펙 정보부터 고객 커뮤니케이션 고민까지, 무엇이든 물어보세요!
             </p>
@@ -121,14 +121,14 @@ def render_app_ui(graph, save_chat_to_db):
             st.markdown('<div class="quick-btn-row">', unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1,1,1], gap="small")
             with col1:
-                if st.button("A/S 정책", key="quick_as", use_container_width=True):
-                    st.session_state.quick_input = "A/S 정책 알려줘"
+                if st.button("FAQ Button1", key="quick_as", use_container_width=True):
+                    st.session_state.quick_input = "FAG Button1"
             with col2:
-                if st.button("제품 재고", key="quick_stock", use_container_width=True):
-                    st.session_state.quick_input = "제품 재고 현황 알려줘"
+                if st.button("FAQ Button2", key="quick_stock", use_container_width=True):
+                    st.session_state.quick_input = "FAQ Button2"
             with col3:
-                if st.button("스펙 비교", key="quick_spec", use_container_width=True):
-                    st.session_state.quick_input = "갤럭시 S24와 S23의 스펙 비교해줘"
+                if st.button("FAQ Button3", key="quick_spec", use_container_width=True):
+                    st.session_state.quick_input = "FAQ Button3"
             st.markdown('</div>', unsafe_allow_html=True)
 
             # 퀵 리플라이 버튼 클릭 감지
@@ -136,11 +136,11 @@ def render_app_ui(graph, save_chat_to_db):
             quick_val = stq.get_query_params().get("quick", [""])[0] if hasattr(stq, "get_query_params") else ""
             if quick_val:
                 if quick_val == "as":
-                    st.session_state.quick_input = "A/S 정책 알려줘"
+                    st.session_state.quick_input = "FAQ Button1"
                 elif quick_val == "stock":
-                    st.session_state.quick_input = "제품 재고 현황 알려줘"
+                    st.session_state.quick_input = "FAQ Button2"
                 elif quick_val == "spec":
-                    st.session_state.quick_input = "갤럭시 S24와 S23의 스펙 비교해줘"
+                    st.session_state.quick_input = "FAQ Button3"
 
             # ------- 채팅 내역 표시 (최신부터 순차적으로) -------
             for turn in st.session_state.chat_history:
@@ -212,6 +212,7 @@ def render_app_ui(graph, save_chat_to_db):
                         )
         elif st.session_state.selected_tab == "설정":
             st.markdown("#### ⚙️ 설정")
-            st.info("이곳에 추후 사용자 프로필, 다크모드, 데이터 초기화 등 환경설정 메뉴를 구현 예정!")
+            st.info("추후 사용자 프로필, 다크모드, 데이터 초기화 등 환경설정 메뉴를 구현 예정!")
+            st.info("Router 기반으로 Agent1, Agent2를 구분하는 것이 아닌, 탭에서 Agent1, Agent2를 선택하는 방향도 고려 중")
 
         st.markdown('</div>', unsafe_allow_html=True)  # main-container end
