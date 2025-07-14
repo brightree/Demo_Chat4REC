@@ -3,7 +3,7 @@
 # 개선이 필요한 사항
     # 기존 프롬프트 >> 프롬프트 템플릿 사용
 
-import streamlit as st
+from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import os
 import json
@@ -162,6 +162,8 @@ def agent1_product_info(state: GraphState) -> GraphState:
 # ==============================
 # 🎓 Agent2 (강의 추천 챗봇)
 # ==============================
+
+
 def agent2_recommend_courses(state: GraphState) -> GraphState:
     full_history = ""
     for turn in st.session_state.chat_history:
