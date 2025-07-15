@@ -280,5 +280,5 @@ def save_chat_to_db(user_input, llm_response):
     }).execute()
     st.session_state.turn_index += 1
 
-from ui2 import render_app_ui
+from ui3 import render_app_ui
 render_app_ui(graph, save_chat_to_db)  # UI 실행
