@@ -1,3 +1,6 @@
+# 변경 사항
+    # 상단 로고가 내려오는 현상 수정
+
 import streamlit as st
 from datetime import datetime
 
@@ -140,10 +143,13 @@ def render_app_ui(graph, save_chat_to_db):
         st.session_state.selected_tab = st.radio(
             "메뉴",
             ("챗봇", "히스토리", "설정"),
-            index=["챗봇", "히스토리", "설정"].index(st.session_state.selected_tab)
+            index=["챗봇", "히스토리", "설정"].index(st.session_state.selected_tab),
+            key="main_menu_radio_modified"  # 여기 에러?
         )
         st.markdown("<hr/>", unsafe_allow_html=True)
         st.write("**Powered by 삼성전자 Sales AI**")
+
+
 
     # === 메인 컨테이너 (최상단에 단 1번만 로고/헤더!) ===
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
@@ -235,6 +241,22 @@ def render_app_ui(graph, save_chat_to_db):
 
     elif tab == "히스토리":
         st.markdown("#### 📚 대화 히스토리")
+
+        # 히스토리 탭 내 버튼 row
+        st.markdown('<div class="quick-btn-row">', unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1, 1, 1], gap="small")
+        with col1:
+            if st.button("유저 고민 요약", key="btn_sum_hist", use_container_width=True):
+                st.session_state.analysis_type = "summary"
+        with col2:
+            if st.button("학습 스타일 정리", key="btn_style_hist", use_container_width=True):
+                st.session_state.analysis_type = "style"
+        with col3:
+            if st.button("학습 방법 추천", key="btn_recommend_hist", use_container_width=True):
+                st.session_state.analysis_type = "recommend"
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
         if not st.session_state.chat_history:
             st.info("아직 대화 히스토리가 없습니다.")
         else:
@@ -249,9 +271,44 @@ def render_app_ui(graph, save_chat_to_db):
                         unsafe_allow_html=True
                     )
 
-    elif tab == "설정":
+        # 👇 분석 요청/결과 노출 (변경 없음)
+        if "analysis_type" in st.session_state and st.session_state.analysis_type:
+            from stdemo7 import client  # LLM 인스턴스 가져오기
+            history_str = ""
+            for turn in st.session_state.chat_history:
+                history_str += f"사용자: {turn['user']}\n"
+                history_str += f"챗봇: {turn['bot']}\n"
+            if st.session_state.analysis_type == "summary":
+                prompt = f"아래는 사용자의 세일즈/학습 관련 고민 대화 내역입니다.\n이 사용자의 고민을 한 문단으로 요약해 주세요.\n\n{history_str}"
+            elif st.session_state.analysis_type == "style":
+                prompt = f"아래는 사용자의 세일즈/학습 관련 대화 기록입니다.\n이 사용자의 학습 스타일(예: 질문 경향, 선호 유형 등)을 분석해 정리해 주세요.\n\n{history_str}"
+            elif st.session_state.analysis_type == "recommend":
+                prompt = f"아래는 사용자의 세일즈/학습 관련 대화 기록입니다.\n이 사용자에게 맞는 학습 방법/전략을 2~3개 추천해 주세요.\n\n{history_str}"
+            with st.spinner("AI가 히스토리 분석 중..."):
+                try:
+                    res = client.chat.completions.create(
+                        model="gpt-4.1-nano",
+                        messages=[
+                            {"role": "system", "content": "세일즈/학습 전문가"},
+                            {"role": "user", "content": prompt}
+                        ]
+                    )
+                    result_text = res.choices[0].message.content.strip()
+                except Exception as e:
+                    result_text = f"❗분석 오류: {e}"
+                st.session_state.analysis_result = result_text
+                st.session_state.analysis_type = None
+                st.rerun()
+
+        # 분석 결과 노출 (버튼 아래에)
+        if "analysis_result" in st.session_state and st.session_state.analysis_result:
+            st.success(st.session_state.analysis_result)
+
+     
+
+    elif tab == "설정": 
         st.markdown("#### ⚙️ 설정")
-        dark_mode_val = st.checkbox("🌙 다크모드", value=st.session_state.dark_mode)
+        dark_mode_val = st.checkbox("🌙 다크모드 (구현 중)", value=st.session_state.dark_mode)
         st.session_state.dark_mode = dark_mode_val        
         st.info("추후 사용자 프로필, 다크모드, 데이터 초기화 등 환경설정 메뉴를 구현 예정!")
         st.info("Router 기반으로 Agent1, Agent2를 구분하는 것이 아닌, 탭에서 Agent1, Agent2를 선택하는 방향도 고려 중")
