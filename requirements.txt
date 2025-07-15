@@ -8,6 +8,8 @@ langchain>=0.1.17
 langchain-community>=0.0.35
 langchain-openai>=0.1.3
 faiss-cpu>=1.7.4
+langgraph>=0.0.20
+
 
 # PDF Loader
 PyMuPDF>=1.22.0  # for PyMuPDFLoader
@@ -20,3 +22,4 @@ supabase>=1.0.0
 
 # Type hinting, typing
 typing-extensions>=4.5.0
+
