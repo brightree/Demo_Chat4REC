@@ -219,7 +219,7 @@ def render_app_ui(graph, save_chat_to_db):
                     response_text = response_text.get("result", str(response_text))
                 route_used = result.get("route", "")
                 if route_used == "agent1":
-                    response_header = "📱 [제품 정보 Agent]"
+                    response_header = "📱 [루비콘 Agent]"
                 elif route_used == "agent2":
                     response_header = "🎓 [학습 추천 Agent]"
                 else:

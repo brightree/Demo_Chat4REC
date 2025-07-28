@@ -169,7 +169,7 @@ def route_intent(state: GraphState) -> GraphState:
     formatted_prompt = routing_prompt_template.format(user_query=user_query)
 
     response = client.chat.completions.create(
-        model="gpt-4.1-nano",
+        model="gpt-4.1-mini",
         messages=[
             {"role": "system", "content": "당신은 사용자 질문을 분류하는 시스템입니다."},
             {"role": "user", "content": formatted_prompt}
@@ -231,7 +231,7 @@ def agent2_recommend_courses(state: GraphState) -> GraphState:
         )
 
         res = client.chat.completions.create(
-            model="gpt-4.1-nano",
+            model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": "삼성전자 세일즈 강의 추천 전문가"},
                 {"role": "user", "content": formatted_prompt}
